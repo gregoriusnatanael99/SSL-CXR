@@ -1,0 +1,8 @@
+__pycache__/
+preprocessed_data/
+models/__pycache__
+outputs/
+.hydra/
+misc/__pycache__
+evaluators/__pycache__
+models/simsiam/

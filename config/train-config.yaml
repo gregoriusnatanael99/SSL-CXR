@@ -1,0 +1,27 @@
+defaults:  
+  - _self_  
+  - hydra.output_subdir: null
+  - hp_configs: hp_config
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled
+  # - override hydra.run.dir: .
+
+hydra:
+  run:
+    dir: .
+
+hp:
+  seed: 1234
+  batch_size: 8
+
+dataset:
+  dir: './preprocessed_data/'
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+
+training:
+  gpu_id: [0]
+  num_workers: 4
+  train_mode: grid_search
+  save_model: True
+  class_weighting: False
