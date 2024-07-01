@@ -11,54 +11,39 @@ from src.misc.utils import *
 from src.model_trainer import Model_Trainer
 from datetime import datetime as dt
 
-def construct_dataset(cfg):
+def construct_dataset(cfg_ds,batch_size,num_workers):
     data_transforms = {
         'train': transforms.Compose([
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize(cfg.DATASET_MEAN, cfg.DATASET_STD)
+            transforms.Normalize(cfg_ds['mean'], cfg_ds['std'])
         ]),
         'val': transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(cfg.DATASET_MEAN, cfg.DATASET_STD)
+            transforms.Normalize(cfg_ds['mean'], cfg_ds['std'])
         ])
     }
 
-    image_datasets = {x: datasets.ImageFolder(os.path.join(cfg.DATASET_DIR, x),
+    image_datasets = {x: datasets.ImageFolder(os.path.join(cfg_ds['dir'], x),
                                           data_transforms[x])
                   for x in ['train', 'val']}
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=cfg.BATCH_SIZE,
-                                                shuffle=True, num_workers=cfg.NUM_WORKERS)
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size,
+                                                shuffle=True, num_workers=num_workers)
                 for x in ['train', 'val']}
 
     return image_datasets, dataloaders
 
-def map_config(raw_cfg):
-    cfg = edict()
-    cfg.DATASET_DIR = raw_cfg['dataset']['dir']
-    cfg.BATCH_SIZE = raw_cfg['hp']['batch_size']
-    cfg.NUM_WORKERS = raw_cfg['training']['num_workers']
-    cfg.DATASET_MEAN = raw_cfg['dataset']['mean']
-    cfg.DATASET_STD = raw_cfg['dataset']['std']
-    cfg.WEIGHTING = raw_cfg['training']['class_weighting']
-    cfg.SAVE_MODEL = raw_cfg['training']['save_model']
-    cfg.TRAIN_MODE = raw_cfg['training']['train_mode']
-    cfg.BACKBONE = raw_cfg['model']['backbone']
-    cfg.BACKBONE_ARCH = raw_cfg['model']['backbone_arch']
-    cfg.TL_ALGO = raw_cfg['model']['tl_algo']
-    cfg.SEED = raw_cfg['hp']['seed']
-
-    if raw_cfg['training']['train_mode'] == 'grid_search':
-        cfg['HP'] = raw_cfg['hp_configs']['grid-hp']
-    elif raw_cfg['training']['train_mode'] == 'normal':
-        cfg['HP'] = raw_cfg['hp_configs']['normal-hp']
+def lower_cfg_vals(cfg):
+    cfg['training']['train_mode'] = cfg['training']['train_mode'].lower()
+    cfg['model']['backbone'] = cfg['model']['backbone'].lower()
+    cfg['model']['backbone_arch'] = cfg['model']['backbone_arch'].lower()
+    cfg['model']['tl_algo'] = cfg['model']['tl_algo'].lower()
     return cfg
 
 @hydra.main(version_base=None, config_path='config', config_name='train-config')
 def init_training(prog_cfg: DictConfig):
-    raw_cfg = OmegaConf.to_container(prog_cfg,resolve=True)
-    seed = raw_cfg['hp']['seed']
-    print(raw_cfg)
+    cfg = OmegaConf.to_container(prog_cfg,resolve=True)
+    seed = cfg['hp']['seed']
 
     if seed is not None:
         np.random.seed(seed)
@@ -67,22 +52,33 @@ def init_training(prog_cfg: DictConfig):
     
     cudnn.benchmark = True
 
-    cfg = map_config(raw_cfg)
-    image_datasets, dataloaders = construct_dataset(cfg)
+    # cfg = map_config(raw_cfg)
+    image_datasets, dataloaders = construct_dataset(cfg['dataset'],batch_size=cfg['hp']['batch_size'],num_workers=cfg['training']['num_workers'])
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
     class_names = image_datasets['train'].classes
 
     print(f'Training on classes: {class_names}')
-    cfg['num_class'] = len(class_names)
+    cfg['model']['num_class'] = len(class_names)
+
+    cfg = lower_cfg_vals(cfg)
     
-    if cfg.WEIGHTING:
-        cfg['class_weights'] = calculate_class_weights(image_datasets['train'])
-        cfg['class_weights'] = [i for i in cfg['class_weights']]
+    if cfg['training']['class_weighting']:
+        cfg['training']['class_weights'] = calculate_class_weights(image_datasets['train'])
+        cfg['training']['class_weights'] = [i for i in cfg['class_weights']]
     #    cfg['class_weights'] = [0.01,0.01,0.01,10]
-        print(f"Using class weights: {cfg['class_weights']}")
+        print(f"Using class weights: {cfg['training']['class_weights']}")
+
+    if cfg['training']['train_mode'] == 'grid_search':
+        cfg['train_hp'] = cfg['hp_configs']['grid-hp']
+    elif cfg['training']['train_mode'] == 'normal':
+        cfg['train_hp'] = cfg['hp_configs']['normal-hp']
     
+    del cfg['hp_configs']
+
+    print(cfg)
     trainer = Model_Trainer(cfg,dataloaders,dataset_sizes)
     trainer.begin_training()
+
 
 
 

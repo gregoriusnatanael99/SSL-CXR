@@ -14,7 +14,7 @@ from itertools import cycle
 class Model_Evaluator():
     def __init__(self,cfg_data,dataloaders,dataset_sizes):
         self.cfg_data = cfg_data
-        self.cfg_data['TL_ALGO'] = ''
+        self.cfg_data['model']['tl_algo'] = ''
         self.dataloaders = dataloaders
         self.device = torch.device("cuda:"+str(cfg_data.GPU_ID[0]) if torch.cuda.is_available() else "cpu")
         self.dataset_sizes = dataset_sizes

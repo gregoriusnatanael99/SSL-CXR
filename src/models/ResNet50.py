@@ -5,20 +5,20 @@ from torch import nn
 class ResNet50_Model(nn.Module):
     def __init__(self,model_cfg_data):
         super(ResNet50_Model, self).__init__()
-        if model_cfg_data['TL_ALGO'] == "swav":
+        if model_cfg_data['tl_algo'] == "swav":
             self.model = torch.hub.load('facebookresearch/swav:main', 'resnet50')
             for param in self.model.parameters():
                 param.requires_grad = False
-        elif model_cfg_data['TL_ALGO'] == "vicreg":
+        elif model_cfg_data[''] == "vicreg":
             self.model = torch.hub.load('facebookresearch/vicreg:main', 'resnet50')
             for param in self.model.parameters():
                 param.requires_grad = False
             # no fc
-        elif model_cfg_data['TL_ALGO'] == "barlow_twins":
+        elif model_cfg_data['tl_algo'] == "barlow_twins":
             self.model = torch.hub.load('facebookresearch/barlowtwins:main', 'resnet50')
             for param in self.model.parameters():
                 param.requires_grad = False
-        elif model_cfg_data['TL_ALGO'] == "simsiam":
+        elif model_cfg_data['tl_algo'] == "simsiam":
             self.model = models.resnet50(pretrained=False)
             # load locally
             checkpoint = torch.load('./models/simsiam/model_best.pth.tar')
@@ -28,7 +28,7 @@ class ResNet50_Model(nn.Module):
                         param.data = checkpoint['state_dict']['module.'+name]
             for param in self.model.parameters():
                 param.requires_grad = False
-        elif model_cfg_data['TL_ALGO'] == "moco":
+        elif model_cfg_data['tl_algo'] == "moco":
             self.model = models.resnet50(pretrained=True)
             # load locally
             checkpoint = torch.load('./models/moco/moco_v2_800ep_pretrain.pth.tar')
@@ -38,7 +38,7 @@ class ResNet50_Model(nn.Module):
                         param.data = checkpoint['state_dict']['module.encoder_q.'+name]
             for param in self.model.parameters():
                 param.requires_grad = False
-        elif model_cfg_data['TL_ALGO'] == "supervised":
+        elif model_cfg_data['tl_algo'] == "supervised":
             self.model = models.resnet50(pretrained=True)
             for param in self.model.parameters():
                 param.requires_grad = False

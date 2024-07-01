@@ -9,6 +9,7 @@ import torch.optim as optim
 from src.misc.utils import *
 from hyperopt import fmin, tpe, hp, Trials, STATUS_OK, STATUS_FAIL
 import copy
+import warnings
 
 class Model_Trainer():
     def __init__(self,cfg_data,dataloaders,dataset_sizes):
@@ -17,15 +18,18 @@ class Model_Trainer():
         self.dataloaders = dataloaders
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.dataset_sizes = dataset_sizes
-        self.exp_path = create_exp_path(self.cfg_data)
+        if cfg_data['training']['save_model']:
+            self.exp_path = create_exp_path(self.cfg_data)
+        else:
+            warnings.warn("Model is not saved!")
     
     def begin_training(self):
         self.global_best_loss = np.inf
         self.global_best_model = None
-        if self.cfg_data.TRAIN_MODE == "normal":
+        if self.cfg_data['training']['train_mode']== "normal":
             print("Initiating training with defined hyperparameters. . .")
-            best_params = self.train_model(self.cfg_data.NORMAL_HP_DICT)
-        elif self.cfg_data.TRAIN_MODE == "grid_search":
+            best_params = self.train_model(self.cfg_data["train_hp"])
+        elif self.cfg_data['training']['train_mode'] == "grid_search":
             print("Initiating training with hyperparameter grid search. . .")
             bayes_trials = Trials()
             best_params = fmin(
@@ -35,7 +39,7 @@ class Model_Trainer():
                 max_evals=self.gs_calculate_max_evals(),
                 # max_evals=20,
                 trials=bayes_trials,
-                rstate=np.random.default_rng(self.cfg_data.SEED)
+                rstate=np.random.default_rng(self.cfg_data['hp']['seed'])
             )
         else:
             print("Training mode unrecognized, please check config.py!")
@@ -50,8 +54,8 @@ class Model_Trainer():
 
         criterion = nn.CrossEntropyLoss()
         try:
-            if self.cfg_data['class_weights']:
-                setattr(criterion,'weight',torch.Tensor(self.cfg_data['class_weights']).to(self.device))
+            if self.cfg_data['training']['class_weights']:
+                setattr(criterion,'weight',torch.Tensor(self.cfg_data['training']['class_weights']).to(self.device))
                 print("Class weights set!")
         except:
             print("Not using class weights")
@@ -136,8 +140,8 @@ class Model_Trainer():
         if self.overwrite_best_model(best_loss,best_model):
             # part_exp_path = create_part_results_exp_path(self.exp_path,params)
             train_val_df = pd.DataFrame.from_dict(history_dict)
-            log_train_data(self.exp_path,train_val_df,self.cfg_data.TL_ALGO,params,self.cfg_data['UNFROZEN_BLOCKS'])
-            if self.cfg_data.SAVE_MODEL:
+            log_train_data(self.exp_path,train_val_df,self.cfg_data['model']['tl_algo'],params,self.cfg_data['UNFROZEN_BLOCKS'])
+            if self.cfg_data['training']['save_model']:
                 save_model_state_dict(self.exp_path,best_model)
             # with open(os.path.join(self.exp_path,"best_params.txt"),"w") as f:
             #     f.write(str(params))
@@ -154,30 +158,30 @@ class Model_Trainer():
     def gs_calculate_max_evals(self):
         print("Calculating max evals . . .")
         num_evals = 1
-        for i in self.cfg_data.HP.keys():
-            num_evals*=len(self.cfg_data.HP[i])
+        for i in self.cfg_data['train_hp'].keys():
+            num_evals*=len(self.cfg_data['train_hp'][i])
         return num_evals
     
     def construct_hp_search_space(self):
         print("Building hyperparameter search space . . .")
         search_space = {}
-        for i in self.cfg_data.HP.keys():
-            search_space[i] = hp.choice(i,self.cfg_data.HP[i])
+        for i in self.cfg_data['train_hp'].keys():
+            search_space[i] = hp.choice(i,self.cfg_data['train_hp'][i])
         return search_space
 
     def initialize_model(self):
-        torch.manual_seed(self.cfg_data.SEED)
-        if self.cfg_data["BACKBONE"] == "resnet50":
+        torch.manual_seed(self.cfg_data['hp']['seed'])
+        if self.cfg_data['model']['backbone'] == "resnet50":
             from src.models.ResNet50 import ResNet50_Model as net
-            return net(self.cfg_data)
-        elif self.cfg_data["BACKBONE"] == "densenet121":
+            return net(self.cfg_data['model'])
+        elif self.cfg_data['model']['backbone'] == "densenet121":
             from src.models.DenseNet121 import DenseNet121_Model as net
-            return net(self.cfg_data)
-        elif self.cfg_data["BACKBONE"] == "vit":
+            return net(self.cfg_data['model'])
+        elif self.cfg_data['model']['backbone'] == "vit":
             from src.models.VisionTransformer import ViT_Model as net
-            return net(self.cfg_data)
+            return net(self.cfg_data['model'])
         else:
-            raise TypeError(self.cfg_data["BACKBONE"])
+            raise TypeError(self.cfg_data['model']['backbone'])
 
     def overwrite_best_model(self,curr_best_loss,curr_model):
         if curr_best_loss < self.global_best_loss:

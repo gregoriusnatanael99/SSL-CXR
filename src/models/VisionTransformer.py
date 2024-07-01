@@ -6,9 +6,9 @@ from .backbones.VisionTransformer_APS import build_model_aps
 class ViT_Model(nn.Module):
     def __init__(self,model_cfg_data):
         super(ViT_Model, self).__init__()
-        if model_cfg_data['TL_ALGO'] == "aps":
-            self.model = build_model_aps(model_cfg_data['BACKBONE_ARCH'])
-        elif model_cfg_data['TL_ALGO'] == "dinov2":
+        if model_cfg_data['tl_algo'] == "aps":
+            self.model = build_model_aps(model_cfg_data['backbone_arch'])
+        elif model_cfg_data['tl_algo'] == "dinov2":
             self.model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14')
 
         for param in self.model.parameters():
