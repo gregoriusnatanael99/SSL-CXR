@@ -25,3 +25,8 @@ training:
   train_mode: grid_search
   save_model: True
   class_weighting: False
+
+model:
+  backbone: vit
+  backbone_arch: vit-tiny
+  tl_algo: aps

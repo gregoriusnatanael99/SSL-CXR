@@ -5,9 +5,11 @@ import torch.backends.cudnn as cudnn
 import numpy as np
 from torchvision import datasets, transforms
 import os
-from misc.utils import *
 from easydict import EasyDict as edict
-from model_trainer import Model_Trainer
+
+from src.misc.utils import *
+from src.model_trainer import Model_Trainer
+from datetime import datetime as dt
 
 def construct_dataset(cfg):
     data_transforms = {
@@ -40,6 +42,11 @@ def map_config(raw_cfg):
     cfg.DATASET_STD = raw_cfg['dataset']['std']
     cfg.WEIGHTING = raw_cfg['training']['class_weighting']
     cfg.SAVE_MODEL = raw_cfg['training']['save_model']
+    cfg.TRAIN_MODE = raw_cfg['training']['train_mode']
+    cfg.BACKBONE = raw_cfg['model']['backbone']
+    cfg.BACKBONE_ARCH = raw_cfg['model']['backbone_arch']
+    cfg.TL_ALGO = raw_cfg['model']['tl_algo']
+    cfg.SEED = raw_cfg['hp']['seed']
 
     if raw_cfg['training']['train_mode'] == 'grid_search':
         cfg['HP'] = raw_cfg['hp_configs']['grid-hp']
@@ -51,6 +58,7 @@ def map_config(raw_cfg):
 def init_training(prog_cfg: DictConfig):
     raw_cfg = OmegaConf.to_container(prog_cfg,resolve=True)
     seed = raw_cfg['hp']['seed']
+    print(raw_cfg)
 
     if seed is not None:
         np.random.seed(seed)
@@ -64,10 +72,22 @@ def init_training(prog_cfg: DictConfig):
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
     class_names = image_datasets['train'].classes
 
-    print(class_names)
+    print(f'Training on classes: {class_names}')
     cfg['num_class'] = len(class_names)
-    print(cfg)
+    
+    if cfg.WEIGHTING:
+        cfg['class_weights'] = calculate_class_weights(image_datasets['train'])
+        cfg['class_weights'] = [i for i in cfg['class_weights']]
+    #    cfg['class_weights'] = [0.01,0.01,0.01,10]
+        print(f"Using class weights: {cfg['class_weights']}")
+    
+    trainer = Model_Trainer(cfg,dataloaders,dataset_sizes)
+    trainer.begin_training()
+
 
 
 if __name__ == "__main__":
+    start = dt.now()
     init_training()
+    end = dt.now()
+    print(f"Training finished in {end-start}")

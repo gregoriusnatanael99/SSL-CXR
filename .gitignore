@@ -5,4 +5,6 @@ outputs/
 .hydra/
 misc/__pycache__
 evaluators/__pycache__
-models/simsiam/
+src/models/simsiam/
+exp/
+src/models/pre-trained/
