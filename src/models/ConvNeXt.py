@@ -5,6 +5,7 @@ from backbones.VisionTransformer_APS import Vit
 
 class ConvNeXt_Model(nn.Module):
     def __init__(self,model_cfg_data):
+        
         return 0
     
     def forward(self,x):

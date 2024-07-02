@@ -14,11 +14,13 @@ from datetime import datetime as dt
 def construct_dataset(cfg_ds,batch_size,num_workers):
     data_transforms = {
         'train': transforms.Compose([
-            transforms.RandomHorizontalFlip(),
+            transforms.Resize(cfg_ds['img_size']),
+            # transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(cfg_ds['mean'], cfg_ds['std'])
         ]),
         'val': transforms.Compose([
+            transforms.Resize(cfg_ds['img_size']),
             transforms.ToTensor(),
             transforms.Normalize(cfg_ds['mean'], cfg_ds['std'])
         ])
@@ -51,7 +53,7 @@ def init_training(prog_cfg: DictConfig):
         torch.cuda.manual_seed(seed)
     
     cudnn.benchmark = True
-
+    print(torch.cuda.is_available())
     # cfg = map_config(raw_cfg)
     image_datasets, dataloaders = construct_dataset(cfg['dataset'],batch_size=cfg['hp']['batch_size'],num_workers=cfg['training']['num_workers'])
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}

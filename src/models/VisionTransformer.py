@@ -19,12 +19,14 @@ class ViT_Model(nn.Module):
             self.fc_exists = True
 
         self.model.fc = nn.Linear(num_ftrs, model_cfg_data['num_class'])
-
+        print(model_cfg_data)
         try:
-            if model_cfg_data['UNFROZEN_BLOCKS'] > 0:
+            if model_cfg_data['unfrozen_blocks'] > 0:
                 self.freeze_layers(model_cfg_data)
-        except:
-            model_cfg_data['UNFROZEN_BLOCKS'] = 0
+                print(f"{model_cfg_data['unfrozen_blocks']} transformer blocks frozen")
+        except Exception as e:
+            print(e)
+            model_cfg_data['unfrozen_blocks'] = 0
     
     def forward(self,x):
         x = self.model(x)
@@ -36,7 +38,7 @@ class ViT_Model(nn.Module):
     
     def freeze_layers(self,model_cfg_data):
         a_modules = [i for i in dict(self.model.named_modules()) if "transformer" in i and "." in i and len(i) < 15]
-        for i in range(len(a_modules) - model_cfg_data['UNFROZEN_BLOCKS'],len(a_modules)):
+        for i in range(len(a_modules) - model_cfg_data['unfrozen_blocks'],len(a_modules)):
             for name,param in self.model.named_parameters():
                 if a_modules[i] in name:
                     param.requires_grad = True

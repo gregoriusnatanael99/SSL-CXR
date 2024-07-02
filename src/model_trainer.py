@@ -10,6 +10,7 @@ from src.misc.utils import *
 from hyperopt import fmin, tpe, hp, Trials, STATUS_OK, STATUS_FAIL
 import copy
 import warnings
+from tqdm import tqdm
 
 class Model_Trainer():
     def __init__(self,cfg_data,dataloaders,dataset_sizes):
@@ -86,7 +87,7 @@ class Model_Trainer():
                 running_corrects = 0
 
                 # Iterate over data.
-                for inputs, labels in self.dataloaders[phase]:
+                for inputs, labels in tqdm(self.dataloaders[phase]):
                     inputs = inputs.to(self.device)
                     labels = labels.to(self.device)
 

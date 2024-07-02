@@ -145,15 +145,15 @@ class Vit(torch.nn.Module):
 
         return out
     
-    def set_pretrained_weights(self):
+    def set_pretrained_weights(self,arch_cfg,src_dataset):
         return 0
 
 def build_model_aps(arch_cfg):
     if arch_cfg == 'vit-tiny':
-        return Vit(emb_dim=192, num_head=3, out_ndim=10)
+        return Vit(emb_dim=192, num_head=3, out_ndim=10, image_size=224)
     elif arch_cfg =='vit-small':
-        return Vit(emb_dim=384, num_head=6, out_ndim=10)
+        return Vit(emb_dim=384, num_head=6, out_ndim=10, image_size=224)
     elif arch_cfg =='vit-base':
-        return Vit(emb_dim=768, num_head=12, out_ndim=10)
+        return Vit(emb_dim=768, num_head=12, out_ndim=10, image_size=224)
     else:
         raise NameError("backbone_arch must be either vit-tiny, vit-small, or vit-base")

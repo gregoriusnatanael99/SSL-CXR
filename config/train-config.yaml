@@ -12,10 +12,11 @@ hydra:
 
 hp:
   seed: 1234
-  batch_size: 8
+  batch_size: 4
 
 dataset:
-  dir: './preprocessed_data/'
+  dir: 'C:/Users/grego/Documents/NVIDIA DLI/Notebooks/My Notebooks/data/birds-20/'
+  img_size: [224,224]
   mean: [0.485, 0.456, 0.406]
   std: [0.229, 0.224, 0.225]
 
@@ -30,3 +31,4 @@ model:
   backbone: vit
   backbone_arch: vit-tiny
   tl_algo: aps
+  unfrozen_blocks: 3
