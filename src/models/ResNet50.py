@@ -19,7 +19,7 @@ class ResNet50_Model(nn.Module):
             for param in self.model.parameters():
                 param.requires_grad = False
         elif model_cfg_data['tl_algo'] == "simsiam":
-            self.model = models.resnet50(pretrained=False)
+            self.model = models.resnet50(weights='ResNet50_Weights.DEFAULT')
             # load locally
             checkpoint = torch.load('./models/simsiam/model_best.pth.tar')
             for name, param in self.model.named_parameters():
@@ -29,7 +29,7 @@ class ResNet50_Model(nn.Module):
             for param in self.model.parameters():
                 param.requires_grad = False
         elif model_cfg_data['tl_algo'] == "moco":
-            self.model = models.resnet50(pretrained=True)
+            self.model = models.resnet50(weights='ResNet50_Weights.DEFAULT')
             # load locally
             checkpoint = torch.load('./models/moco/moco_v2_800ep_pretrain.pth.tar')
             for name, param in self.model.named_parameters():
@@ -39,11 +39,11 @@ class ResNet50_Model(nn.Module):
             for param in self.model.parameters():
                 param.requires_grad = False
         elif model_cfg_data['tl_algo'] == "supervised":
-            self.model = models.resnet50(pretrained=True)
+            self.model = models.resnet50(weights='ResNet50_Weights.DEFAULT')
             for param in self.model.parameters():
                 param.requires_grad = False
         else:
-            self.model = models.resnet50(pretrained=False)
+            self.model = models.resnet50(weights=None)
 
         if hasattr(self.model,"fc"):
             num_ftrs = self.model.fc.in_features
@@ -54,10 +54,11 @@ class ResNet50_Model(nn.Module):
         self.model.fc = nn.Linear(num_ftrs, model_cfg_data['num_class'])
 
         try:
-            if model_cfg_data['UNFROZEN_BLOCKS'] > 0:
+            if model_cfg_data['unfrozen_blocks'] > 0:
                 self.freeze_layers(model_cfg_data)
-        except:
-            model_cfg_data['UNFROZEN_BLOCKS'] = 0
+        except Exception as e:
+            print(e)
+            model_cfg_data['unfrozen_blocks'] = 0
     
     def forward(self,x):
         x = self.model(x)
@@ -68,7 +69,7 @@ class ResNet50_Model(nn.Module):
 
     def freeze_layers(self,model_cfg_data):
         a_modules = [i for i in dict(self.model.named_modules()) if "layer" in i and "." not in i]
-        for i in range(len(a_modules) - model_cfg_data['UNFROZEN_BLOCKS'],len(a_modules)):
+        for i in range(len(a_modules) - model_cfg_data['unfrozen_blocks'],len(a_modules)):
             for name,param in self.model.named_parameters():
                 if a_modules[i] in name:
                     param.requires_grad = True

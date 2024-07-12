@@ -5,7 +5,7 @@ import torch.backends.cudnn as cudnn
 import numpy as np
 from torchvision import datasets, transforms
 import os
-from easydict import EasyDict as edict
+# from easydict import EasyDict as edict
 
 from src.misc.utils import *
 from src.model_trainer import Model_Trainer

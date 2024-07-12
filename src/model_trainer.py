@@ -1,5 +1,3 @@
-# from this import d
-from encodings import search_function
 import numpy as np
 import pandas as pd
 
@@ -141,7 +139,7 @@ class Model_Trainer():
         if self.overwrite_best_model(best_loss,best_model):
             # part_exp_path = create_part_results_exp_path(self.exp_path,params)
             train_val_df = pd.DataFrame.from_dict(history_dict)
-            log_train_data(self.exp_path,train_val_df,self.cfg_data['model']['tl_algo'],params,self.cfg_data['UNFROZEN_BLOCKS'])
+            log_train_data(self.exp_path,train_val_df,self.cfg_data['model']['tl_algo'],params,self.cfg_data['model']['unfrozen_blocks'])
             if self.cfg_data['training']['save_model']:
                 save_model_state_dict(self.exp_path,best_model)
             # with open(os.path.join(self.exp_path,"best_params.txt"),"w") as f:

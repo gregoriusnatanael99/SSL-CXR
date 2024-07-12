@@ -17,6 +17,9 @@ class ViT_Model(nn.Module):
         if hasattr(self.model,"fc"):
             num_ftrs = self.model.fc.in_features
             self.fc_exists = True
+        else:
+            self.fc_exists = False
+            num_ftrs = 384
 
         self.model.fc = nn.Linear(num_ftrs, model_cfg_data['num_class'])
         print(model_cfg_data)
@@ -32,7 +35,7 @@ class ViT_Model(nn.Module):
         x = self.model(x)
         if not self.fc_exists:
             x = self.model.fc(x)
-        x = nn.functional.softmax(x,dim=1)
+        # x = nn.functional.softmax(x,dim=1)
         return x
     
     

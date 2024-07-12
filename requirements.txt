@@ -1,0 +1,8 @@
+xformers==0.0.24+cu118
+hyperopt
+hydra-core
+omegaconf
+timm
+pandas==2.2.2
+einops
+scikit-learn==1.3.2

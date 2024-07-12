@@ -114,12 +114,12 @@ class ConvNeXtV2(nn.Module):
             self.stages.append(stage)
             cur += depths[i]
 
-        # self.norm = nn.LayerNorm(dims[-1], eps=1e-6) # final norm layer
-        # self.head = nn.Linear(dims[-1], num_classes)
+        self.norm = nn.LayerNorm(dims[-1], eps=1e-6) # final norm layer
+        self.head = nn.Linear(dims[-1], num_classes)
 
         self.apply(self._init_weights)
-        # self.head.weight.data.mul_(head_init_scale)
-        # self.head.bias.data.mul_(head_init_scale)
+        self.head.weight.data.mul_(head_init_scale)
+        self.head.bias.data.mul_(head_init_scale)
 
     def _init_weights(self, m):
         if isinstance(m, (nn.Conv2d, nn.Linear)):
@@ -136,35 +136,3 @@ class ConvNeXtV2(nn.Module):
         x = self.forward_features(x)
         x = self.head(x)
         return x
-
-def convnextv2_atto(**kwargs):
-    model = ConvNeXtV2(depths=[2, 2, 6, 2], dims=[40, 80, 160, 320], **kwargs)
-    return model
-
-def convnextv2_femto(**kwargs):
-    model = ConvNeXtV2(depths=[2, 2, 6, 2], dims=[48, 96, 192, 384], **kwargs)
-    return model
-
-def convnext_pico(**kwargs):
-    model = ConvNeXtV2(depths=[2, 2, 6, 2], dims=[64, 128, 256, 512], **kwargs)
-    return model
-
-def convnextv2_nano(**kwargs):
-    model = ConvNeXtV2(depths=[2, 2, 8, 2], dims=[80, 160, 320, 640], **kwargs)
-    return model
-
-def convnextv2_tiny(**kwargs):
-    model = ConvNeXtV2(depths=[3, 3, 9, 3], dims=[96, 192, 384, 768], **kwargs)
-    return model
-
-def convnextv2_base(**kwargs):
-    model = ConvNeXtV2(depths=[3, 3, 27, 3], dims=[128, 256, 512, 1024], **kwargs)
-    return model
-
-def convnextv2_large(**kwargs):
-    model = ConvNeXtV2(depths=[3, 3, 27, 3], dims=[192, 384, 768, 1536], **kwargs)
-    return model
-
-def convnextv2_huge(**kwargs):
-    model = ConvNeXtV2(depths=[3, 3, 27, 3], dims=[352, 704, 1408, 2816], **kwargs)
-    return model

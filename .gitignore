@@ -7,4 +7,7 @@ misc/__pycache__
 evaluators/__pycache__
 src/models/simsiam/
 exp/
-src/models/pre-trained/
+src/models/pre-trained/ConvNeXt/v2/*
+src/models/pre-trained/ResNet50/simsiam/*
+src/models/pre-trained/ViT/APS/*
+nih-cxr-lt_single-label_train.csv
