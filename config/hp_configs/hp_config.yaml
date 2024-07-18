@@ -1,11 +1,11 @@
 normal-hp:
-  epochs: 10
+  epochs: 25
   optimizer: adam
   lr: 1e-3
-  weight_decay: 0
+  weight_decay: 1e-2
 
 grid-hp:
-  epochs: [10]
+  epochs: [25]
   optimizer: [adam]
-  lr: [1e-1,1e-2,1e-3,1e-4,1e-5]
-  weight_decay: [0,1e-1,1e-2,1e-3,1e-4,1e-5]
+  lr: [1e-3,1e-4,1e-5]
+  weight_decay: [1e-2,1e-3,1e-4,1e-5]

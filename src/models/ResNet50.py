@@ -9,7 +9,7 @@ class ResNet50_Model(nn.Module):
             self.model = torch.hub.load('facebookresearch/swav:main', 'resnet50')
             for param in self.model.parameters():
                 param.requires_grad = False
-        elif model_cfg_data[''] == "vicreg":
+        elif model_cfg_data['tl_algo'] == "vicreg":
             self.model = torch.hub.load('facebookresearch/vicreg:main', 'resnet50')
             for param in self.model.parameters():
                 param.requires_grad = False

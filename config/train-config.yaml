@@ -23,9 +23,9 @@ dataset:
 training:
   gpu_id: [0]
   num_workers: 0
-  train_mode: grid_search
+  train_mode: normal
   save_model: True
-  class_weighting: False
+  class_weighting: True
 
 model:
   backbone: vit
