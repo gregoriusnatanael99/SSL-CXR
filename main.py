@@ -66,7 +66,6 @@ def init_training(prog_cfg: DictConfig):
     
     if cfg['training']['class_weighting']:
         cfg['training']['class_weights'] = calculate_class_weights(image_datasets['train'])
-        cfg['training']['class_weights'] = [i for i in cfg['class_weights']]
     #    cfg['class_weights'] = [0.01,0.01,0.01,10]
         print(f"Using class weights: {cfg['training']['class_weights']}")
 
