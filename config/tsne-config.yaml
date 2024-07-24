@@ -1,0 +1,16 @@
+model:
+  backbone: resnet  # bisa ganti densenet ato vit
+  backbone_arch: vit-tiny
+  tl_algo: dinov2
+  seed: 1234
+  num_class: 15
+  unfrozen_blocks: 0 
+
+tsne:
+  n_components: 2
+  verbose: 1
+  perplexity: 40
+  n_iter: 500
+  random_state: ${seed_value}
+
+seed_value: 1234
