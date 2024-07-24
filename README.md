@@ -34,6 +34,9 @@ conda install pytorch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 pytorch-cuda=
 ```
 For more information, take a look at https://pytorch.org/get-started/previous-versions/
 
+## Using the Program
+We used Hydra to enable flexible hyperparameter configuration.
+
 ## Contributors:
 1. Gregorius Natanael Elwirehardja (https://github.com/gregoriusnatanael99)
 2. Farrel Alexander Tjan (https://github.com/XHYPEX)

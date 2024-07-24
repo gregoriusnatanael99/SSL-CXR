@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir", type=str)
     parser.add_argument("--dest", type=str)
-    parser.add_argument("--rate", type=float)
+    parser.add_argument("--rate", type=float, default=0.5)
 
     args = parser.parse_args()
 
