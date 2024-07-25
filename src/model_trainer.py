@@ -70,6 +70,9 @@ class Model_Trainer():
         best_acc = 0.0
         history_dict = {'train_loss':[],'train_acc':[],'val_loss':[],'val_acc':[]}
 
+        if self.cfg_data['hp']['early_stopping']:
+            early_stopping = EarlyStopping(patience=self.cfg_data['hp']['patience'], verbose=True)
+
         for epoch in range(params['epochs']):
             print(f"Epoch {epoch+1}/{params['epochs']}")
             print('-' * 20)
@@ -134,6 +137,12 @@ class Model_Trainer():
                     history_dict['val_loss'].append(epoch_loss)
                     history_dict['val_acc'].append(epoch_acc.cpu().numpy())
 #                    history_dict['val_acc'].append(epoch_acc)
+                
+                    # Early stopping
+                    early_stopping(epoch_loss, self.model)
+                    if early_stopping.early_stop:
+                        print(f"Early stopping after {epoch+1} epochs")
+                        break
 
         # print(history_dict)
         if self.overwrite_best_model(best_loss,best_model):

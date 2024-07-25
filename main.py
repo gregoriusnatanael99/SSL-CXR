@@ -80,9 +80,6 @@ def init_training(prog_cfg: DictConfig):
     trainer = Model_Trainer(cfg,dataloaders,dataset_sizes)
     trainer.begin_training()
 
-
-
-
 if __name__ == "__main__":
     start = dt.now()
     init_training()
