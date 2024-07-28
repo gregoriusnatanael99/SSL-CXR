@@ -5,6 +5,10 @@ import torch.backends.cudnn as cudnn
 import numpy as np
 from torchvision import datasets, transforms
 import os
+import json
+from datetime import datetime as dt
+
+from src.model_evaluator import Model_Evaluator
 
 def construct_dataset(cfg_ds,batch_size,num_workers):
     data_transforms = {
@@ -45,3 +49,19 @@ def init_testing(prog_cfg: DictConfig):
     image_datasets, dataloaders = construct_dataset(cfg['dataset'],batch_size=cfg['hp']['batch_size'],num_workers=cfg['testing']['num_workers'])
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
     class_names = image_datasets['test'].classes
+
+    try:
+        with open('data.json') as json_file:
+            data = json.load(json_file)
+    except:
+        cfg = lower_cfg_vals(cfg)
+    
+    print(cfg)
+    trainer = Model_Evaluator(cfg,dataloaders,dataset_sizes)
+    trainer.begin_testing()
+
+if __name__ == "__test__":
+    start = dt.now()
+    init_testing()
+    end = dt.now()
+    print(f"Testing finished in {end-start}")

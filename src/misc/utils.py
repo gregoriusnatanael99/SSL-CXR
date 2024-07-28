@@ -1,11 +1,11 @@
-from cmath import exp
-from operator import index
 import numpy as np
 import torch
 import os
 import pandas as pd
 import time
 from sklearn.utils.class_weight import compute_class_weight
+import json
+import warnings
 
 np.random.seed(42)
 torch.manual_seed(42)
@@ -29,14 +29,21 @@ def create_part_results_exp_path(exp_path,hp_dict):
     os.makedirs(exp_path,exist_ok=True)
     return exp_path
 
-def log_train_data(exp_path,df,tl_algo,hp_dict,unfrozen_blocks):
+def log_train_data(exp_path,df,cfg_dict,tl_algo,hp_dict=None,unfrozen_blocks=None):
+    if hp_dict:
+        warnings.warn("Usage of hp_dict will be deprecated in the future", FutureWarning)
+    if unfrozen_blocks:
+        warnings.warn("Usage of unfrozen blocks will be deprecated in the future", FutureWarning)
     print("Saving train-val loss data . . .")
     f_name = "train_val_loss_{}.csv".format(tl_algo)
     df.to_csv(os.path.join(exp_path, f_name),index=False)
 
-    with open(exp_path+"/config.txt",'w') as file:
-        file.write('Epochs: {}\nOptimizer: {}\nLearning rate: {}\nWeight decay: {}\nUnfrozen blocks: {}\n'.format(hp_dict['epochs'], hp_dict['optimizer'],hp_dict['lr'], hp_dict['weight_decay'],unfrozen_blocks))
-        file.write(f'\nModel: {tl_algo}')
+    # with open(exp_path+"/config.txt",'w') as file:
+    #     file.write('Epochs: {}\nOptimizer: {}\nLearning rate: {}\nWeight decay: {}\nUnfrozen blocks: {}\n'.format(hp_dict['epochs'], hp_dict['optimizer'],hp_dict['lr'], hp_dict['weight_decay'],unfrozen_blocks))
+    #     file.write(f'\nModel: {tl_algo}')
+
+    with open(exp_path+"/config.json",'w') as file:
+        json.dump(cfg_dict,file)
 
 def save_model_state_dict(exp_path,model):
     print("Saving model . . .")

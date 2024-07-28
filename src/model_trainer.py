@@ -148,19 +148,15 @@ class Model_Trainer():
         if self.overwrite_best_model(best_loss,best_model):
             # part_exp_path = create_part_results_exp_path(self.exp_path,params)
             train_val_df = pd.DataFrame.from_dict(history_dict)
-            log_train_data(self.exp_path,train_val_df,self.cfg_data['model']['tl_algo'],params,self.cfg_data['model']['unfrozen_blocks'])
+            log_train_data(self.exp_path,train_val_df,self.cfg_data,self.cfg_data['model']['tl_algo'])
             if self.cfg_data['training']['save_model']:
                 save_model_state_dict(self.exp_path,best_model)
-            # with open(os.path.join(self.exp_path,"best_params.txt"),"w") as f:
-            #     f.write(str(params))
 
         time_elapsed = time.time() - since
         print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         print(f'Best val Loss: {best_loss:4f}')
         print(f'Best val Acc: {best_acc:4f}')
         
-
-        # load best model weights
         return {'loss':best_loss,'acc':best_acc,'params':params,'status': STATUS_OK}
 
     def gs_calculate_max_evals(self):
@@ -187,6 +183,9 @@ class Model_Trainer():
             return net(self.cfg_data['model'])
         elif self.cfg_data['model']['backbone'] == "vit":
             from src.models.VisionTransformer import ViT_Model as net
+            return net(self.cfg_data['model'])
+        elif self.cfg_data['model']['backbone'] == "convnextv2":
+            from src.models.ConvNeXt import ConvNeXt_Model as net
             return net(self.cfg_data['model'])
         else:
             raise TypeError(self.cfg_data['model']['backbone'])
