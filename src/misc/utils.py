@@ -16,7 +16,7 @@ def create_exp_path(cfg_data):
     exp_name +="_"
     exp_name += cfg_data['training']['train_mode']
         
-    exp_path = "exp/{}/{}".format(cfg_data['model']['tl_algo'], exp_name)
+    exp_path = "exp/{}/{}/{}".format(cfg_data['model']['backbone'], cfg_data['model']['tl_algo'], exp_name)
     os.makedirs(exp_path,exist_ok=True)
     print(exp_path+" directory created!")
 
@@ -54,7 +54,7 @@ def calculate_class_weights(image_dataset):
     return list(compute_class_weight(class_weight='balanced',classes=np.unique(targets),y=targets))
     
 def export_conf_mat(conf_mat,class_names,exp_path):
-    res_df = pd.DataFrame(conf_mat.numpy().astype('int'))
+    res_df = pd.DataFrame(conf_mat.astype('int'))
     for i in range(len(res_df.columns)):
         res_df = res_df.rename(columns={res_df.columns[i]:"pred_"+class_names[i]}, 
                                         index={res_df.columns[i]:"gt_"+class_names[i]})

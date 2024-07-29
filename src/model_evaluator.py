@@ -6,8 +6,9 @@ from torch import nn
 from src.misc.utils import *
 from sklearn import metrics
 from matplotlib import pyplot as plt
-from sklearn.preprocessing import label_binarize
-from itertools import cycle
+from sklearn.preprocessing import MultiLabelBinarizer, label_binarize
+from itertools import cycle, chain
+from tqdm import tqdm
 
 class Model_Evaluator():
     def __init__(self,cfg_data,dataloaders,dataset_sizes):
@@ -17,7 +18,7 @@ class Model_Evaluator():
         self.device = torch.device("cuda:"+str(cfg_data['testing']['gpu_id']) if torch.cuda.is_available() else "cpu")
         self.dataset_sizes = dataset_sizes
         self.model = self.initialize_model()
-        self.model.load_state_dict(torch.load(os.path.join(self.cfg_data['exp_folder'],self.cfg_data['model_name'])))
+        self.model.load_state_dict(torch.load(os.path.join(self.cfg_data['model']['exp_folder'],self.cfg_data['model']['model_name'])))
 
     def begin_testing(self):
         criterion = nn.CrossEntropyLoss()
@@ -31,34 +32,37 @@ class Model_Evaluator():
 
         print("Evaluating model . . .")
         with torch.no_grad():
-            for inputs, classes in self.dataloaders:
+            for inputs, classes in tqdm(self.dataloaders['test']):
                 inputs = inputs.to(self.device)
                 labels = classes.to(self.device)
 
                 outputs = self.model(inputs)
-                print(outputs)
+                # print(outputs)
                 _, preds = torch.max(outputs, 1)
-                print(preds,labels.cpu().tolist()[0])
+                # print(preds,labels.cpu().tolist()[0])
                 test_loss.append(criterion(outputs, labels).cpu().numpy())
 
                 count+=1
-                print("Processed {} images, current loss = {}".format(count,np.mean(test_loss)))
+                # print("Processed {} images, current loss = {}".format(count,np.mean(test_loss)))
                 confusion_matrix[labels.cpu().tolist()[0], preds.cpu().tolist()[0]] += 1
                 y_pred.append(preds.cpu().tolist())
                 y_true.append(labels.cpu().tolist())
-                y_prob.append(outputs.cpu().tolist()[0])
-       
+                y_prob.append(outputs.cpu().tolist())
+
+        y_true = np.array(list(chain(*y_true)))
+        y_pred = np.array(list(chain(*y_pred)))
+        confusion_matrix = metrics.confusion_matrix(y_true=y_true,y_pred=y_pred)
         print("Building confusion matrix . . .")
-        res_df = export_conf_mat(confusion_matrix,class_names=self.cfg_data.class_names,exp_path=self.cfg_data['exp_folder'])
+        res_df = export_conf_mat(confusion_matrix,class_names=self.cfg_data['class_names'],exp_path=self.cfg_data['model']['exp_folder'])
 
         print("Generating ROC . . .")
-        roc_auc = self.calculate_roc(y_true,y_pred,y_prob,class_names=self.cfg_data.class_names,exp_path=self.cfg_data['exp_folder'],save_bool=True)
+        roc_auc = self.calculate_roc(y_true,y_pred,y_prob,class_names=self.cfg_data['class_names'],exp_path=self.cfg_data['model']['exp_folder'],save_bool=True)
 
         print("Calculating evaluation metrics . . .")
-        metric_df = self.calculate_classification_metrics_from_conf_mat(res_df,self.cfg_data.class_names,roc_auc)
+        metric_df = self.calculate_classification_metrics_from_conf_mat(res_df,self.cfg_data['class_names'],roc_auc)
         res_dict = {}
         res_dict['loss'] = np.mean(test_loss)
-        res_dict['acc'] = np.sum(metric_df['tp'])/np.sum(confusion_matrix.numpy().astype('int'))
+        res_dict['acc'] = np.sum(metric_df['tp'])/np.sum(confusion_matrix.astype('int'))
         # roc_dict = self.calc_roc_curve(y_test=y_true,y_score=y_pred,n_classes=self.cfg_data['num_class'])
 
         res_dict['macro_auc'] = roc_auc['macro']
@@ -69,9 +73,9 @@ class Model_Evaluator():
         res_dict['macro_rec'] = np.mean(metric_df['recall'])
         res_dict['macro_f1'] = np.mean(metric_df['F1'])
 
-        res_df.to_csv(os.path.join(self.cfg_data['exp_folder'],"confusion_matrix.csv"))
+        res_df.to_csv(os.path.join(self.cfg_data['model']['exp_folder'],"confusion_matrix.csv"))
 
-        log_test_data(self.cfg_data['exp_folder'],res_dict,metric_df)
+        log_test_data(self.cfg_data['model']['exp_folder'],res_dict,metric_df)
 
     def calculate_classification_metrics_from_conf_mat(self,res_df,class_names,roc_auc):
         res_dict = {'tp':{},'fp':{},'fn':{},'tn':{},'fpr':{},'fnr':{},'tpr':{},'tnr':{},'precision':{}
@@ -109,19 +113,30 @@ class Model_Evaluator():
         return pd.DataFrame.from_dict(res_dict)
 
     def initialize_model(self):
-        if self.cfg_data["MODEL_ARCH"] == "resnet50":
-            from models.ResNet50 import ResNet50_Model as net
-            return net(self.cfg_data)
-        elif self.cfg_data["MODEL_ARCH"] == "densenet121":
-            from models.DenseNet121 import DenseNet121_Model as net
-            return net(self.cfg_data)
-        return None
+        torch.manual_seed(self.cfg_data['hp']['seed'])
+        if self.cfg_data['model']['backbone'] == "resnet50":
+            from src.models.ResNet50 import ResNet50_Model as net
+            return net(self.cfg_data['model'])
+        elif self.cfg_data['model']['backbone'] == "densenet121":
+            from src.models.DenseNet121 import DenseNet121_Model as net
+            return net(self.cfg_data['model'])
+        elif self.cfg_data['model']['backbone'] == "vit":
+            from src.models.VisionTransformer import ViT_Model as net
+            return net(self.cfg_data['model'])
+        elif self.cfg_data['model']['backbone'] == "convnextv2":
+            from src.models.ConvNeXt import ConvNeXt_Model as net
+            return net(self.cfg_data['model'])
+        else:
+            raise TypeError(self.cfg_data['model']['backbone'])
 
     def calculate_roc(self,y_true,y_pred,y_score,class_names,exp_path,save_bool = False):
         classes_bin = [i for i in range(len(class_names))]
         y_true_bin = label_binarize(y_true,classes=classes_bin)
-        y_pred_bin = label_binarize(y_pred,classes=classes_bin)
-        y_score = np.array(y_score)
+        # y_pred_bin = MultiLabelBinarizer(y_pred,classes=classes_bin)
+        # y_true_bin = np.array(list(chain(*y_true_bin)))
+        y_score = np.array(list(chain(*y_score)))
+        # print(y_true_bin.shape)
+        # print(y_score.shape)
         
         fpr = dict()
         tpr = dict()
