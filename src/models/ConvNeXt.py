@@ -1,8 +1,9 @@
 import torch
 from torchvision import models
 from torch import nn
-from backbones.ConvNeXtV2 import ConvNeXtV2
+from .backbones.ConvNeXtV2 import ConvNeXtV2
 import re
+import os
 
 class ConvNeXt_Model(nn.Module):
     def __init__(self,model_cfg_data):
@@ -10,8 +11,9 @@ class ConvNeXt_Model(nn.Module):
         Creates the ConvNeXt model object
 
         """
-        self.model = self.build_model_convnext(model_cfg_data['backbone_arch'],model_cfg_data['num_class'])
-        print(model_cfg_data)
+        super().__init__()
+        self.BASE_PATH = 'src/models/pre-trained/ConvNeXt/v2'
+        self.model = self.build_model_convnext(arch_cfg=model_cfg_data['backbone_arch'],weights=model_cfg_data['tl_algo'],num_class=model_cfg_data['num_class'])
         
         # Freezing the blocks
         try:
@@ -28,17 +30,21 @@ class ConvNeXt_Model(nn.Module):
     
     def freeze_layers(self,model_cfg_data):
         a_modules = [i for i in dict(self.model.named_modules()) if "stages" in i and re.search("[.][0-9]+[.][0-9]+$", i)]
-        for i in range(len(a_modules) - model_cfg_data['UNFROZEN_BLOCKS'],len(a_modules)):
+        for i in range(len(a_modules) - model_cfg_data['unfrozen_blocks'],len(a_modules)):
             for name,param in self.model.named_parameters():
                 if a_modules[i] in name:
+                    print(name)
                     param.requires_grad = True
 
-    def build_model_convnext(arch_cfg,weights,num_class,**kwargs):
+    def build_model_convnext(self,arch_cfg,weights,num_class,**kwargs):
         if arch_cfg == 'convnextv2-atto':
             model = ConvNeXtV2(depths=[2, 2, 6, 2], dims=[40, 80, 160, 320], **kwargs)
             num_ftrs = model.norm.normalized_shape[0]
             if weights == 'ssl':
-                old_state_dict = torch.load('./pre-trained/ConvNeXt/v2/convnextv2_atto_1k_224_fcmae.pt')
+                old_state_dict = torch.load(os.path.join(self.BASE_PATH,'convnextv2_atto_1k_224_fcmae.pt'))
+                for i in old_state_dict['model'].keys():
+                    if "gamma" in i or "beta" in i:
+                        old_state_dict['model'][i] = old_state_dict['model'][i].reshape([1,1,1,old_state_dict['model'][i].shape[-1]])
                 model.load_state_dict(old_state_dict['model'],strict=False)
             model.head = nn.Linear(num_ftrs, num_class)
         elif arch_cfg == 'convnextv2-femto':
