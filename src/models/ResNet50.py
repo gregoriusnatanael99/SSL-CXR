@@ -55,8 +55,15 @@ class ResNet50_Model(nn.Module):
             num_ftrs = 2048
             self.fc_exists = False
 
-        unit_arr = [num_ftrs]
         self.model.fc = nn.Linear(num_ftrs, model_cfg_data["num_class"])
+        # self.model.fc = nn.Sequential(
+        #     nn.Dropout(p=0.2),
+        #     nn.Linear(num_ftrs,128),
+        #     nn.ReLU(),
+        #     nn.Dropout(p=0.2),
+        #     nn.Linear(128,model_cfg_data['num_class']),
+#            nn.Softmax(dim=1)
+        # )
 
         try:
             if model_cfg_data["unfrozen_blocks"] > 0:
@@ -81,6 +88,7 @@ class ResNet50_Model(nn.Module):
         ):
             for name, param in self.model.named_parameters():
                 if a_modules[i] in name:
+                    print(name)
                     param.requires_grad = True
 
     def build_hidden_dense(self, in_features:int, hidden_dim:list=[], dropout:float=0.2):

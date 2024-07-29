@@ -16,6 +16,7 @@ if __name__ == "__main__":
 
     start = dt.now()
     for subfolder in os.listdir(args.dir):
+        # if 'No Finding' in subfolder:
         filenames = os.listdir(os.path.join(args.dir,subfolder))
         samples = random.sample(filenames,int(args.rate*len(filenames)))
         print(f'Processing folder {subfolder} . . .')

@@ -109,6 +109,7 @@ class Model_Trainer():
                         # backward + optimize only if in training phase
                         if phase == 'train':
                             loss.backward()
+                            # print(self.model.model.fc.weight.grad)
                             optimizer.step()
 
                     # statistics
