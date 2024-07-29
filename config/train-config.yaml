@@ -30,7 +30,7 @@ training:
   class_weighting: True
 
 model:
-  backbone: vit
-  backbone_arch: vit-tiny
-  tl_algo: dinov2
+  backbone: convnextv2
+  backbone_arch: convnextv2-atto
+  tl_algo: ssl
   unfrozen_blocks: 1
