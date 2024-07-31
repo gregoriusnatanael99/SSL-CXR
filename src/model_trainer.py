@@ -141,9 +141,9 @@ class Model_Trainer():
                 
                     # Early stopping
                     early_stopping(epoch_loss, self.model)
-                    if early_stopping.early_stop:
-                        print(f"Early stopping after {epoch+1} epochs")
-                        break
+            if early_stopping.early_stop:
+                print(f"Early stopping after {epoch+1} epochs")
+                break
 
         # print(history_dict)
         if self.overwrite_best_model(best_loss,best_model):
