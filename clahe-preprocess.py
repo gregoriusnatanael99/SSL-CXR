@@ -57,4 +57,4 @@ if __name__ == "__main__":
         process_directory(input_folder, output_folder)
         print(f"Finished processing {folder_name} directory.")
 
-    print("Proses CLAHE dan augmentasi DONE :D")
+    print("CLAHE and Augmentation DONE :D")
