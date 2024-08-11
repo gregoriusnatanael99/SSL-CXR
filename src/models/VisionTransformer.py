@@ -27,7 +27,7 @@ class ViT_Model(nn.Module):
         try:
             if model_cfg_data["unfrozen_blocks"] > 0:
                 self.freeze_layers(model_cfg_data)
-                print(f"{model_cfg_data['unfrozen_blocks']} transformer blocks frozen")
+                print(f"{model_cfg_data['unfrozen_blocks']} transformer blocks unfrozen")
         except Exception as e:
             print(e)
             model_cfg_data["unfrozen_blocks"] = 0
@@ -50,4 +50,5 @@ class ViT_Model(nn.Module):
         ):
             for name, param in self.model.named_parameters():
                 if a_modules[i] in name:
+                    print(name)
                     param.requires_grad = True
